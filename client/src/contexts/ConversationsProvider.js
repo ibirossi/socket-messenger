@@ -59,8 +59,17 @@ export function ConversationsProvider({ id, children }) {
       const name = (contact && contact.name) || recipient;
       return { id: recipient, name };
     });
+    const messages = conversation.messages.map(message => {
+        const contact = contacts.find((contact) => {
+            return contact.id === message.sender;
+          });
+          const name = (contact && contact.name) || message.sender
+          const fromMe = id === message.sender
+          return { ...message, senderName: name, fromMe }
+    })
+
     const selected = index === selectedConversationIndex; //determine whether conversation is selected or not.
-    return { ...conversation, recipients, selected }; //new conversation
+    return { ...conversation, messages, recipients, selected }; //new conversation
   });
 
   const value = {
@@ -78,6 +87,7 @@ export function ConversationsProvider({ id, children }) {
   );
 }
 
+//not dependent on component, so placed at end. 
 function arrayEquality(a, b) {
   if (a.length !== b.length) return false;
 
