@@ -51,7 +51,7 @@ function OpenConversation() {
                 // align message from self to right.
                 key={index}
                 className={`my-1 d-flex flex-column ${
-                  message.fromMe ? "align-self-end" : ""
+                  message.fromMe ? "align-self-end align-items-end" : "align-items-start"
                 }`}
               >
                 <div

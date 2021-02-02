@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect, useCallback } from "react";
 import useLocalStorage from "../hooks/useLocalStorage";
 import { useContacts } from "./ContactsProvider";
 import { useSocket } from "./SocketProvider"
@@ -25,7 +25,7 @@ export function ConversationsProvider({ id, children }) {
     });
   }
   //separate function because called from server when message sent and when user sends message.
-  function addMessageToConversation({ recipients, text, sender }) {
+ const addMessageToConversation = useCallback (({ recipients, text, sender }) => {
     setConversations((prevConversations) => {
       //if no conversation exists with recipient, it will be false => can add new conv.
       let madeChange = false;
@@ -47,8 +47,21 @@ export function ConversationsProvider({ id, children }) {
       } else {
         return [...prevConversations, { recipients, messages: [newMessage] }];
       }
-    });
-  }
+    }); //addMessToConv only depends on setConvs, add as dependency. Only changes with conv
+  },[setConversations])
+
+  //need to listen for 'receive-message from server'
+  //need to wrap in useEffect to avoid running on each render. 
+  useEffect(() => {
+    //if no socket do nothing
+    if(socket == null) return
+    //if socket exists call addMessageToConv => contains recips, sender, text, id 
+    socket.on('receive-message', addMessageToConversation)
+
+    //Removes event listener.  Prevents multiples. 
+    //addMessToConv runs every render so need to wrap in useCallBack above
+    return () => socket.off('receive-message')
+  }, [socket, addMessageToConversation])
 
   function sendMessage(recipients, text) {
     socket.emit('send-message', { recipients, text })
